@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.peaksware.com/PWX/1/0" targetNamespace="http://www.peaksware.com/PWX/1/0" elementFormDefault="qualified" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.peaksware.com/PWX/1/0 http://www.peaksware.com/PWX/1/0/pwx.xsd">
+	<xsd:element name="pwx">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="workout" minOccurs="0" maxOccurs="unbounded">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="athlete" type="athlete" minOccurs="0"/>
+							<xsd:element name="goal" type="xsd:string" minOccurs="0"/>
+							<xsd:element name="sportType" type="sportTypes" minOccurs="0"/>
+							<xsd:element name="title" type="xsd:string" minOccurs="0"/>							
+							<xsd:element name="cmt" type="xsd:string" minOccurs="0"/>
+							<xsd:element name="code" type="xsd:string" minOccurs="0"/>
+							<xsd:element name="device" type="device" minOccurs="1"/>
+							<xsd:element name="time" type="xsd:dateTime" minOccurs="0"/>
+							<xsd:element name="summarydata" type="summaryData"/>
+							<xsd:sequence>
+								<xsd:element name="segment" minOccurs="0" maxOccurs="unbounded">
+									<xsd:complexType>
+										<xsd:sequence>
+											<xsd:element name="name" type="xsd:string" minOccurs="0"/>
+											<xsd:element name="summarydata" type="summaryData"/>
+											<!-- allows for future extension data -->
+											<xsd:element name="extension" minOccurs="0">
+												<xsd:complexType>
+												<xsd:sequence>
+												<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+												</xsd:sequence>
+												</xsd:complexType>
+											</xsd:element>
+										</xsd:sequence>
+									</xsd:complexType>
+								</xsd:element>
+							</xsd:sequence>
+							<xsd:sequence>
+								<!-- elements must appear in this order -->
+								<xsd:element name="sample" minOccurs="0" maxOccurs="unbounded">
+									<xsd:complexType>
+										<xsd:sequence>
+											<xsd:element name="timeoffset" type="xsd:double"/>
+											<!--timeoffset is seconds offset from beginning of wkt -->
+											<!-- Performance info -->
+											<xsd:element name="hr" type="xsd:unsignedByte" minOccurs="0"/>
+											<!-- heart rate in bpm -->
+											<xsd:element name="spd" type="xsd:double" minOccurs="0"/>
+											<!-- speed in mps -->
+											<xsd:element name="pwr" type="xsd:short" minOccurs="0"/>
+											<!-- power in watts -->
+											<xsd:element name="torq" type="xsd:double" minOccurs="0"/>
+											<!-- torque in N-m -->
+											<xsd:element name="cad" type="xsd:unsignedByte" minOccurs="0"/>
+											<!-- cadence in rpm -->
+											<!-- Position info -->
+											<xsd:element name="dist" type="xsd:double" minOccurs="0"/>
+											<!-- distance in meters from beginning -->
+											<xsd:element name="lat" type="latitudeType" minOccurs="0"/>
+											<xsd:element name="lon" type="longitudeType" minOccurs="0"/>
+											<xsd:element name="alt" type="xsd:double" minOccurs="0"/>
+											<!-- elevation in meters -->
+											<xsd:element name="temp" type="xsd:double" minOccurs="0"/>
+											<!-- temperature in celcius -->
+											<!-- Real time if available -->
+											<xsd:element name="time" type="xsd:dateTime" minOccurs="0"/>
+											<xsd:element name="extension" minOccurs="0">
+												<xsd:complexType>
+												<!-- allows for future extension data -->
+												<xsd:sequence>
+												<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+												</xsd:sequence>
+												</xsd:complexType>
+											</xsd:element>
+										</xsd:sequence>
+									</xsd:complexType>
+								</xsd:element>
+							</xsd:sequence>
+							<xsd:element name="extension" minOccurs="0">
+								<xsd:complexType>
+									<!-- allows for future extension data -->
+									<xsd:sequence>
+										<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+									</xsd:sequence>
+								</xsd:complexType>
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:attribute name="id"/>
+					</xsd:complexType>
+				</xsd:element>
+				<!-- allows for future extension data -->
+				<xsd:element name="extension" minOccurs="0">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+			<xsd:attribute name="version" type="xsd:string" use="required" fixed="1.0"/>
+			<xsd:attribute name="creator" type="xsd:string" use="required"/>
+			<!-- version 1.0 -->
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:complexType name="device">
+		<xsd:sequence>
+			<xsd:element name="make" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="model" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="stopdetectionsetting" type="xsd:double" minOccurs="0"/>
+			<!-- stop detection setting:  seconds with no samples available will be treated as stopped
+				ex: 30 would treat any samples with greater than 30 seconds elapsed
+				between them to be treated as stoppage
+			-->
+			<xsd:element name="elevationchangesetting" type="xsd:double" minOccurs="0"/>
+			<!-- elevation change setting:  meters that must change to alter climbing and descending calculations 
+				ex: 10 would ignore any deviations less than 10 meters in elevation in climbing and descending calculations
+			-->
+			<xsd:element name="extension" minOccurs="0">
+				<xsd:complexType>
+					<!-- allows for future extension data -->
+					<xsd:sequence>
+						<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="id" type="xsd:string"/>
+	</xsd:complexType>
+	<xsd:complexType name="minMaxAvg">
+		<xsd:attribute name="max" type="xsd:double"/>
+		<xsd:attribute name="min" type="xsd:double"/>
+		<xsd:attribute name="avg" type="xsd:double"/>
+	</xsd:complexType>
+	<xsd:complexType name="athlete">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="weight" type="xsd:double" minOccurs="0"/>
+			<!--weight in kg-->
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="summaryData">
+		<xsd:sequence>
+			<xsd:element name="beginning" type="xsd:double"/>
+			<!--beggining is seconds offset from beginning of wkt -->
+			<xsd:element name="duration" type="xsd:double"/>
+			<!-- duration in seconds -->
+			<xsd:element name="durationstopped" type="xsd:double" minOccurs="0"/>
+			<!-- duration of time when stopped in seconds -->
+			<xsd:element name="work" type="xsd:double" minOccurs="0"/>
+			<!-- work in kJ -->
+			<xsd:element name="tss" type="xsd:double" minOccurs="0"/>
+			<xsd:element name="normalizedPower" type="xsd:double" minOccurs="0"/>
+			<!-- power in watts -->
+			<xsd:element name="hr" type="minMaxAvg" minOccurs="0"/>
+			<!-- heart rate in bpm -->
+			<xsd:element name="spd" type="minMaxAvg" minOccurs="0"/>
+			<!-- speed in meters per second -->
+			<xsd:element name="pwr" type="minMaxAvg" minOccurs="0"/>
+			<!-- power in watts -->
+			<xsd:element name="torq" type="minMaxAvg" minOccurs="0"/>
+			<!-- torque in nM -->
+			<xsd:element name="cad" type="minMaxAvg" minOccurs="0"/>
+			<!-- cadence in rpm -->
+			<xsd:element name="dist" type="xsd:double" minOccurs="0"/>
+			<!-- distance in meters -->
+			<xsd:element name="alt" type="minMaxAvg" minOccurs="0"/>
+			<!-- altitude in meters -->
+			<xsd:element name="temp" type="minMaxAvg" minOccurs="0"/>
+			<!-- temperature in celcius -->
+			<xsd:element name="variabilityIndex" type="xsd:int" minOccurs="0"/>
+			<xsd:element name="climbingelevation" type="xsd:double" minOccurs="0"/>
+			<!-- elevation climbed in meters -->
+			<xsd:element name="descendingelevation" type="xsd:double" minOccurs="0"/>
+			<!-- elevation descended in meters -->			
+			<xsd:element name="extension" minOccurs="0">
+				<xsd:complexType>
+					<!-- allows for future extension data -->
+					<xsd:sequence>
+						<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>			
+		</xsd:sequence>
+	</xsd:complexType>
+	<!-- Other types used by PWX -->
+	<xsd:simpleType name="latitudeType">
+		<xsd:restriction base="xsd:double">
+			<xsd:minInclusive value="-90.0"/>
+			<xsd:maxInclusive value="90.0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="longitudeType">
+		<xsd:restriction base="xsd:double">
+			<xsd:minInclusive value="-180.0"/>
+			<xsd:maxInclusive value="180.0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="sportTypes">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Bike"/>
+			<xsd:enumeration value="Run"/>
+			<xsd:enumeration value="Walk"/>
+			<xsd:enumeration value="Swim"/>
+			<xsd:enumeration value="Brick"/>
+			<xsd:enumeration value="Cross train"/>
+			<xsd:enumeration value="Race"/>
+			<xsd:enumeration value="Day Off"/>
+			<xsd:enumeration value="Mountain Bike"/>
+			<xsd:enumeration value="Strength"/>
+			<xsd:enumeration value="XC Ski"/>
+			<xsd:enumeration value="Rowing"/>
+			<xsd:enumeration value="Other"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>
