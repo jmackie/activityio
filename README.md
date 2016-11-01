@@ -14,21 +14,21 @@ pip install activityio
 
 There is a `read` function at the top-level of `activityio` that dispatches the appropriate reader based on file extension:
 
-```pycon
+```python-console
 >>> import activityio as aio
 >>> data = aio.read('example.srm')
 ```
 
 But you can also use sub-packages explicitly:
 
-```pycon
+```python-console
 >>> from activityio import srm
 >>> data = srm.read('example.srm')
 ```
 
 `data` is a subclass of the `pandas.DataFrame` and provides some neat additional functionality. Most notably, certain columns are "magic" in that they return specific `pandas.Series` subclasses. These subclasses make unit-switching easy, and provide other useful methods.
 
-```pycon
+```python-console
 >>> type(data)
 <class 'activityio._util.types.ActivityData'>
 
@@ -64,7 +64,7 @@ time
 
 But note that you lose this functionality if you go changing column names:
 
-```pycon
+```python-console
 >>> data = data.rename(columns={'alt': 'altitude'})
 >>> type(data.altitude)
 <class 'pandas.core.series.Series'>
