@@ -1,5 +1,4 @@
 # activityio: Exercise data handling library
-____
 
 Exercise/activity data has become a prolific resource, but applying any kind of sophisticated analyses is made difficult by the variety of file formats. This `python` library is intended to munge a number of these formats and present the data in a predictable and useable form. Moreover, the API is both closely intertwined with, and an extension of, the awesome [`pandas`](https://github.com/pandas-dev/pandas) library.
 
@@ -15,21 +14,21 @@ pip install activityio
 
 There is a `read` function at the top-level of `activityio` that dispatches the appropriate reader based on file extension:
 
-```python
+```pycon
 >>> import activityio as aio
 >>> data = aio.read('example.srm')
 ```
 
 But you can also use sub-packages explicitly:
 
-```python
+```pycon
 >>> from activityio import srm
 >>> data = srm.read('example.srm')
 ```
 
 `data` is a subclass of the `pandas.DataFrame` and provides some neat additional functionality. Most notably, certain columns are "magic" in that they return specific `pandas.Series` subclasses. These subclasses make unit-switching easy, and provide other useful methods.
 
-```python
+```pycon
 >>> type(data)
 <class 'activityio._util.types.ActivityData'>
 
@@ -65,7 +64,7 @@ time
 
 But note that you lose this functionality if you go changing column names:
 
-```python
+```pycon
 >>> data = data.rename(columns={'alt': 'altitude'})
 >>> type(data.altitude)
 <class 'pandas.core.series.Series'>
