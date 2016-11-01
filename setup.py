@@ -21,8 +21,8 @@ setup(
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Intended Audience :: Science/Research'
-        'Topic :: Scientific/Engineering :: Medical Science Apps',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
     ],
