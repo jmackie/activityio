@@ -8,5 +8,7 @@ __pycache__/
 *.so
 *~
 
-tests
-testfiles
+*/__pycache__
+*/*/__pycache__
+tests/
+testfiles/

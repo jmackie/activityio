@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-## MODULE GENERATED AUTOMATICALLY ##
+"""
+This module was generated automatically.
+
+I sincerely apologise for it looking so disgusting.
+
+"""
 from math import isnan
 import struct
 

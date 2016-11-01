@@ -238,7 +238,8 @@ if __name__ == '__main__':
     code = '\n\n'.join(lines)
     code += '\n'  # trailing new line
 
-    outfile = path.join(path.dirname(here), '_profile.py')
+    outfile = path.abspath(path.join(
+        here, '../../activityio/fit', '_profile.py'))
     basetypes_file = path.join(here, 'BASE_TYPES.py')
 
     with open(outfile, 'wt', encoding='utf-8') as out, \
