@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='activityio',
-    version='0.0.1',
+    version='0.0.2',
     description='Exercise data handling library',
     long_description=long_description,
     url='https://github.com/jmackie4/activityio',
@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    packages=find_packages(exclude=('*._references', 'fit._make_profile')),
+    packages=find_packages(exclude=('references', 'scripts', 'dist')),
 
     install_requires=['numpy>=1.11.1', 'pandas>=0.18.1'],
     extras_require={
