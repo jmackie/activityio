@@ -3,6 +3,9 @@
 """
 Some useful functions for parsing XML file types.
 
+Note we need to name this `xml_reading` so as not to clobber the standard
+library package.
+
 """
 from xml.etree.cElementTree import iterparse
 

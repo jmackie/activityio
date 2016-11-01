@@ -4,7 +4,7 @@ import re
 
 from pandas import to_datetime
 
-from activityio._util.xml import gen_nodes, sans_ns
+from activityio._util.xml_reading import gen_nodes, sans_ns
 from activityio._util import drydoc, types
 from activityio._util.exceptions import InvalidFileError
 
