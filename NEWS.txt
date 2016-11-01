@@ -1,0 +1,5 @@
+# Version 0.0.2
++ Directory structure cleaned up.
+
+# Version 0.0.1
++ Alpha version released.
