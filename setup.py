@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    packages=find_packages(exclude=('references', 'scripts', 'dist')),
+    packages=find_packages(exclude=('references', 'scripts')),
 
     install_requires=['numpy>=1.11.1', 'pandas>=0.18.1'],
     extras_require={

@@ -1,5 +1,5 @@
 # Version 0.0.2
-+ Directory structure cleaned up.
++ Non-code files removed from packages.
 
 # Version 0.0.1
 + Alpha version released.
