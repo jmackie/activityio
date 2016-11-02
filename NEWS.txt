@@ -1,5 +1,6 @@
 # Version 0.0.3
-
++ Refactored some of the reading process for xml file types.
++ Corrected a syntax error in the command line interface.
 
 # Version 0.0.2
 + Support added for *.gpx files.
