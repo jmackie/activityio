@@ -32,22 +32,20 @@ def main():
                         help='optional; format of the file',
                         choices=VALID_FORMATS)
 
-    file_path, output, fmt = parser.parse_args()
+    args = parser.parse_args()
 
     # Script begins
     # -------------
-    if fmt is None:
-        fmt = path.splitext(file_path)[-1][1:]
-
+    fmt = args.format or path.splitext(args.input)[-1][1:]
     module = import_module('activityio.' + fmt)
-    data = module.read(file_path)
+    data = module.read(args.input)
     write = partial(data.to_csv,
                     na_rep='NA', index_label='time', encoding='utf-8')
-    if output is None:
+    if args.output is None:
         csv = write()
         print(csv)
     else:
-        write(output)
+        write(args.output)
 
     return 0
 
