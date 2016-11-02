@@ -1,6 +1,7 @@
 # Version 0.0.2
-+ Command line interface added (see `aio -h`)
-+ `activityio._util.xml` was clobbering the standard library package in some instances, so was renamed to `activityio._util.xml_reading`
++ Support added for *.gpx files.
++ Command line interface added (see `aio -h`).
++ `activityio._util.xml` was clobbering the standard library package in some cases, so was renamed to `activityio._util.xml_reading`
 + Non-code files removed from packages.
 
 # Version 0.0.1
