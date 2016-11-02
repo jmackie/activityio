@@ -24,6 +24,7 @@ COLUMN_SPEC = {
 
 
 def format_trackpoint(trackpoint):
+    """Recursively extract tag text."""
     return {sans_ns(child.tag): child.text for child in trackpoint.iter()
             # ignore tags with no text, i.e. parent nodes
             if child.text.strip()}
@@ -39,7 +40,7 @@ def titlecase_to_undercase(string):
 
 @drydoc.gen_records
 def gen_records(file_path):
-    nodes = gen_nodes(file_path, ['Trackpoint'], with_root=True)
+    nodes = gen_nodes(file_path, ('Trackpoint',), with_root=True)
 
     root = next(nodes)
     if sans_ns(root.tag) != 'TrainingCenterDatabase':
