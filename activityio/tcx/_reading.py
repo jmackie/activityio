@@ -4,7 +4,8 @@ import re
 
 from pandas import to_datetime
 
-from activityio._util.xml_reading import gen_nodes, sans_ns
+from activityio._util.xml_reading import (
+    gen_nodes, recursive_text_extract, sans_ns)
 from activityio._util import drydoc, types
 from activityio._util.exceptions import InvalidFileError
 
@@ -21,13 +22,6 @@ COLUMN_SPEC = {
     'speed': types.Speed,
     'watts': types.Power,
 }
-
-
-def format_trackpoint(trackpoint):
-    """Recursively extract tag text."""
-    return {sans_ns(child.tag): child.text for child in trackpoint.iter()
-            # ignore tags with no text, i.e. parent nodes
-            if child.text.strip()}
 
 
 def titlecase_to_undercase(string):
@@ -48,12 +42,12 @@ def gen_records(file_path):
 
     trackpoints = nodes
     for trkpt in trackpoints:
-        yield format_trackpoint(trkpt)
+        yield recursive_text_extract(trkpt)
 
 
 def read_and_format(file_path):
     data = types.ActivityData.from_records(gen_records(file_path))
-    times = data.pop('Time')    # should always be there
+    times = data.pop('Time')                    # should always be there
     data = data.astype('float64', copy=False)   # try and make numeric
 
     # Prettier column names!

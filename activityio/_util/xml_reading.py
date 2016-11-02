@@ -26,6 +26,11 @@ def gen_nodes(file_path, node_names, *, with_root=False):
             root.clear()
 
 
+def recursive_text_extract(node):
+    return {sans_ns(child.tag): child.text for child in node.iter()
+            if child.text is not None and child.text.strip()}
+
+
 def sans_ns(tag):
     """Remove the namespace prefix from a tag."""
     return tag.split('}')[-1]
