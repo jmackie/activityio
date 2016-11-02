@@ -76,10 +76,10 @@ The main package is composed of sub-packages that contain the reading logic for 
 
 The ultimate logic is defined in a `_reading` module, which provides two functions: `gen_records` and `read_and_format`. 
 
-+ `gen_records` is a generator function for iterating over the data-points in a file. The rows of the data table if you like. A "record" is a dictionary.
++ `gen_records` is a generator function for iterating over the data-points in a file. The rows of the data table if you like. A "record" is a dictionary object.
 + `read_and_format` uses the above generator to return an `ActivityData` object.
 
-`read_and_format` is available at the top-level of a sub-package as `read`; so reading in a file looks like `srm.read('path_to_file.srm')`. `gen_records` is imported as the same name.
+`read_and_format` is available at the top-level of a sub-package as `read`; so reading in a file looks like `srm.read('path_to_file.srm')`. `gen_records` is imported under the same name.
 
 There are also some `tools` provided in a separate module.
 
