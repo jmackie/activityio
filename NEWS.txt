@@ -1,3 +1,6 @@
+# Version 0.0.3
+
+
 # Version 0.0.2
 + Support added for *.gpx files.
 + Command line interface added (see `aio -h`).
