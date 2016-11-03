@@ -31,7 +31,7 @@ setup(
 
     install_requires=['numpy>=1.11.1', 'pandas>=0.18.1'],
     extras_require={
-        'dev': [],
+        'dev': ['xlrd>=1.0.0'],
         'test': [],
     },
     entry_points={
