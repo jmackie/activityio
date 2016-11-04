@@ -109,7 +109,7 @@ class ActivityData(DataFrame):
 
     def resample_1hz(self):
         """Resample to 1 Hz, filling gaps with NaNs."""
-        return self.resample('1s').mean()
+        return ActivityData(self.resample('1s').mean())   # keep type
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
