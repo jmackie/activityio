@@ -74,7 +74,7 @@ class ActivityData(DataFrame):
         item = super().__getitem__(key)
         try:
             return SPECIAL_COLUMNS[key](item)
-        except KeyError:
+        except:
             return item
 
     def _finish_up(self, *, column_spec, start=None, timeoffsets=None):
