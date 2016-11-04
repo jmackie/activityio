@@ -143,8 +143,7 @@ class ActivityData(DataFrame):
             if need not in self:
                 raise RequiredColumnError(need)
 
-        return Gradient(rise=self['alt'].diff().values,
-                        run=self['dist'].diff().values)
+        return Gradient(rise=self['alt'].diff(), run=self['dist'].diff())
 
 
 class SeriesSubclass(Series):
@@ -245,7 +244,7 @@ class Gradient(SeriesSubclass):
 
     def __init__(self, *args, rise=None, run=None, **kwargs):
         if rise is not None and run is not None:
-            self._rise, self._run = rise, run
+            self._rise, self._run = rise.values, run.values
             super().__init__(rise/run, *args, **kwargs)
         else:
             super().__init__(*args, **kwargs)
