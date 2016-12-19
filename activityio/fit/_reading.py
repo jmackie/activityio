@@ -68,7 +68,7 @@ def read_and_format(file_path):
     data = types.ActivityData.from_records(gen_records(file_path))
 
     if 'unknown' in data:    # TODO: look into why this is happening.
-        data.drop('unknown', inplace=True)
+        data.drop('unknown', level=1, inplace=True)
 
     if 'timestamp_s' in data:
         timestamps = data.pop('timestamp_s')
