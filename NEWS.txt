@@ -4,6 +4,7 @@
 + More general exception catching in ActivityData.__getitem__ so as not to interfere with the parent method.
 + Creating a `Gradient` column via the `ActivityData.gradient()` method was dropping the index. This is fixed.
 + `ActivityData.resample_1hz()` doesn't fall back to being a `DataFrame` anymore.
++ Various bug fixes.
 
 # Version 0.0.2
 + Support added for *.gpx files.
