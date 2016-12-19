@@ -25,7 +25,7 @@ class BaseType:
         return self.identifier & 0x1F
 
 
-BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if all(b == 0xFF for b in x) else x)
+BASE_TYPE_BYTE = BaseType(name='byte', identifier=0x0D, fmt='B', parse=lambda x: None if x == 0xFF else x)
 
 # Decide how invalid values are to be handled with the `parse` attribute.
 BASE_TYPES = {
