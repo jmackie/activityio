@@ -120,7 +120,7 @@ class ActivityData(DataFrame):
         window = 25
         resampled_pwr = self._try_get('pwr').resample('1s').mean()
         weights = tools.ema_weights(window)
-        smooth_pwr = resampled_pwr.rolling(25).apply(
+        smooth_pwr = resampled_pwr.rolling(window).apply(
             lambda arr: np.sum(arr * weights))
         return np.mean(smooth_pwr**4)**(1 / 4)
 
