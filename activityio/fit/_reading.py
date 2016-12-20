@@ -5,13 +5,14 @@ Translate the `_protocol` module functionality to be consistent with
 this package's API.
 
 """
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 from activityio.fit._protocol import gen_fit_messages, DataMessage
 from activityio._util import drydoc, types
 
 
-DATETIME_1990 = datetime(year=1990, month=1, day=1)
+YEARS_20 = relativedelta(years=20)   # for formatting timestamps
 
 
 COLUMN_SPEC = {     # see Profile.xlsx for expected column names
@@ -43,11 +44,10 @@ def format_message(message):
 
     message_dict = {make_key(field): field[1] for field in decoded}
 
-    try:
-        message_dict['timestamp_s'] = (
-            DATETIME_1990 + timedelta(seconds=message_dict['timestamp_s']))
-    except KeyError:
-        pass
+    timestamp = message_dict.pop('timestamp_s', None)
+    if timestamp:
+        message_dict['timestamp'] = (
+            datetime.fromtimestamp(timestamp) + YEARS_20)
 
     return message.name, message_dict
 
@@ -70,8 +70,8 @@ def read_and_format(file_path):
     if 'unknown' in data:    # TODO: look into why this is happening.
         del data['unknown']
 
-    if 'timestamp_s' in data:
-        timestamps = data.pop('timestamp_s')
+    if 'timestamp' in data:
+        timestamps = data.pop('timestamp')
         timeoffsets = timestamps - timestamps[0]
         data._finish_up(column_spec=COLUMN_SPEC,
                         start=timestamps[0], timeoffsets=timeoffsets)
