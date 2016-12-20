@@ -105,24 +105,22 @@ class ActivityData(DataFrame):
 
     def rollmean(self, column, seconds, *, samplingfreq=1):
         """Apply rolling mean by time to column."""
-        resampled = self.resample('%ds' % samplingfreq).mean()  # gaps --> NaNs
-        return resampled[column].rolling(seconds).mean()
+        return (self._get_resampled(column, samplingfreq)
+                    .rolling(seconds).mean())
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
         window = 30
-        resampled_pwr = self._try_get('pwr').resample('1s').mean()
-        smooth_pwr = resampled_pwr.rolling(window).mean()
-        return np.mean(smooth_pwr**4)**(1 / 4)
+        smooth_pwr = self._get_resampled('pwr').rolling(window).mean()
+        return np.mean(smooth_pwr**4)**0.25
 
     def xpwr(self):
         """Dr Skiba's xPower."""
         window = 25
-        resampled_pwr = self._try_get('pwr').resample('1s').mean()
         weights = tools.ema_weights(window)
-        smooth_pwr = resampled_pwr.rolling(window).apply(
+        smooth_pwr = self._get_resampled('pwr').rolling(window).apply(
             lambda arr: np.sum(arr * weights))
-        return np.mean(smooth_pwr**4)**(1 / 4)
+        return np.mean(smooth_pwr**4)**0.25
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
@@ -144,6 +142,37 @@ class ActivityData(DataFrame):
     def gradient(self):
         alt, dist = (self._try_get(key) for key in ('alt', 'dist'))
         return Gradient(rise=alt.diff(), run=dist.diff())
+
+    def pwr_prof(self, durations, *, duration_index=True, return_gen=False):
+        """Extract best powers for given durations.
+
+        Parameters
+        ----------
+        durations : iterable
+            Time durations (in seconds) for which best powers are to be found.
+        duration_index : bool, optional
+            Should the durations be made into the index of the returned data,
+            or left as a column?
+        return_gen : bool, optional
+            Return a generator of (duration, best_power) pairs?
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        resampled_pwr = self._get_resampled('pwr')
+        gen = ((dur, resampled_pwr.rolling(dur).mean().max())  # MMP
+               for dur in durations)
+
+        if return_gen:
+            return gen
+
+        df = DataFrame(gen, columns=('duration', 'pwr'))
+        return df.set_index('duration') if duration_index else df
+
+    def _get_resampled(self, column, samplingfreq=1):
+        rule = '%ds' % samplingfreq
+        return self._try_get(column).resample(rule).mean()  # missing --> NaNs
 
     def _try_get(self, key):
         """Try and get a required column from the data."""
