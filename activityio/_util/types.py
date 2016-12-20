@@ -110,11 +110,18 @@ class ActivityData(DataFrame):
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
-        try:
-            smooth_pwr = self.rollmean('pwr', 30)
-        except KeyError as e:
-            raise RequiredColumnError('pwr') from e
+        window = 30
+        resampled_pwr = self._try_get('pwr').resample('1s').mean()
+        smooth_pwr = resampled_pwr.rolling(window).mean()
+        return np.mean(smooth_pwr**4)**(1 / 4)
 
+    def xpwr(self):
+        """Dr Skiba's xPower."""
+        window = 25
+        resampled_pwr = self._try_get('pwr').resample('1s').mean()
+        weights = tools.ema_weights(window)
+        smooth_pwr = resampled_pwr.rolling(25).apply(
+            lambda arr: np.sum(arr * weights))
         return np.mean(smooth_pwr**4)**(1 / 4)
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
@@ -131,16 +138,19 @@ class ActivityData(DataFrame):
         dtime = np.diff(self.index.total_seconds())
         # numpy.diff doesn't prepend an NaN
         dtime = np.insert(dtime, 0, np.nan)
-        dvert = self['alt'].diff()
+        dvert = self._try_get('alt').diff()
         return VAM(dvert / dtime)
 
     def gradient(self):
-        needs = ('alt', 'dist')
-        for need in needs:
-            if need not in self:
-                raise RequiredColumnError(need)
+        alt, dist = (self._try_get(key) for key in ('alt', 'dist'))
+        return Gradient(rise=alt.diff(), run=dist.diff())
 
-        return Gradient(rise=self['alt'].diff(), run=self['dist'].diff())
+    def _try_get(self, key):
+        """Try and get a required column from the data."""
+        try:
+            return self[key]
+        except KeyError as e:
+            raise RequiredColumnError(key) from e
 
 
 class SeriesSubclass(Series):
