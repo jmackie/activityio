@@ -103,13 +103,10 @@ class ActivityData(DataFrame):
             # because recursion problems with super().__getattr__()
             raise AttributeError('index is not TimedeltaIndex')
 
-    def rollmean(self, column, seconds):
+    def rollmean(self, column, seconds, *, samplingfreq=1):
         """Apply rolling mean by time to column."""
-        return self.resample_1hz()[column].rolling(seconds).mean()
-
-    def resample_1hz(self):
-        """Resample to 1 Hz, filling gaps with NaNs."""
-        return ActivityData(self.resample('1s').mean())   # keep type
+        resampled = self.resample('%ds' % samplingfreq).mean()  # gaps --> NaNs
+        return resampled[column].rolling(seconds).mean()
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
@@ -118,7 +115,7 @@ class ActivityData(DataFrame):
         except KeyError as e:
             raise RequiredColumnError('pwr') from e
 
-        return np.mean(smooth_pwr**4)**(1/4)
+        return np.mean(smooth_pwr**4)**(1 / 4)
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
