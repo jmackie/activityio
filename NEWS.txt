@@ -1,9 +1,12 @@
 # Version 0.0.3
++ `ActivityData` has some new methods:
+    - The GoldenCheetah/Skiba 'xPower' metric (`xpwr()`)
++ .fit file timestamps weren't being handled correctly. Now they are.
 + Refactored some of the reading process for xml file types.
 + Corrected a syntax error in the command line interface.
 + More general exception catching in ActivityData.__getitem__ so as not to interfere with the parent method.
 + Creating a `Gradient` column via the `ActivityData.gradient()` method was dropping the index. This is fixed.
-+ `ActivityData.resample_1hz()` doesn't fall back to being a `DataFrame` anymore.
++ `ActivityData.resample_1hz()` is gone as it was a bit overkill. Call the `pandas` API instead.
 + Various bug fixes.
 
 # Version 0.0.2
@@ -14,3 +17,8 @@
 
 # Version 0.0.1
 + Alpha version released.
+
+___
+# TODO:
++ Make sure that `DataFrame` methods on `ActivityData` return an `ActivityData` instance.
++ Make tests executable via `pip`.
