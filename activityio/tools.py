@@ -154,3 +154,10 @@ def bearing(lon, lat, *, final=False, fill=np.nan):
         bearing = (bearing + 180) % 180
 
     return np.concatenate(([fill], bearing))
+
+
+def ema_weights(n):
+    """Simple exponential weights function."""
+    alpha = 2 / (n + 1)
+    weights = np.array([alpha * (1 - alpha)**(-i) for i in range(n)])
+    return weights / weights.sum()
