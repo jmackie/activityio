@@ -1,6 +1,7 @@
 # Version 0.0.3
 + `ActivityData` has some new methods:
     - The GoldenCheetah/Skiba 'xPower' metric (`xpwr()`)
+    - `normwork()` (normalised work), which I've found useful.
     - `pwr_prof()` for power profiling.
 + .fit file timestamps weren't being handled correctly. Now they are.
 + Refactored some of the reading process for xml file types.
