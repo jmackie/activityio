@@ -114,6 +114,11 @@ class ActivityData(DataFrame):
         smooth_pwr = self._get_resampled('pwr').rolling(window).mean()
         return np.mean(smooth_pwr**4)**0.25
 
+    def normwork(self, kj=False):
+        """Normalised work."""
+        joules = self.normpwr() * self.time[-1].seconds
+        return (joules / 1000) if kj else joules
+
     def xpwr(self):
         """Dr Skiba's xPower."""
         window = 25
