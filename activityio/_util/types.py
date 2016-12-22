@@ -116,8 +116,17 @@ class ActivityData(DataFrame):
 
     def normwork(self, *, kj=False):
         """Normalised work."""
-        joules = self.normpwr() * self.time[-1].seconds
+        joules = self.normpwr() * self.moving_time().seconds
         return (joules / 1000) if kj else joules
+
+    def moving_time(self):
+        """Time spent in an activity."""
+        col = self.columns[0]
+        original = self[col].index
+        resampled = self._get_resampled(col).index
+        moving = resampled[np.in1d(resampled, original)]
+        movingdiffs = np.diff(moving.total_seconds())
+        return Timedelta(seconds=movingdiffs.sum())
 
     def xpwr(self):
         """Dr Skiba's xPower."""

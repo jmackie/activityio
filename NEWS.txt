@@ -3,6 +3,7 @@
     - The GoldenCheetah/Skiba 'xPower' metric (`xpwr()`)
     - `normwork()` (normalised work), which I've found useful.
     - `pwr_prof()` for power profiling.
+    - `moving_time()` for calculating actual time spent in an activity.
 + .fit file timestamps weren't being handled correctly. Now they are.
 + Refactored some of the reading process for xml file types.
 + Corrected a syntax error in the command line interface.
