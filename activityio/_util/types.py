@@ -114,19 +114,15 @@ class ActivityData(DataFrame):
         smooth_pwr = self._get_resampled('pwr').rolling(window).mean()
         return np.mean(smooth_pwr**4)**0.25
 
-    def normwork(self, *, kj=False):
-        """Normalised work."""
-        joules = self.normpwr() * self.moving_time().seconds
-        return (joules / 1000) if kj else joules
-
-    def moving_time(self):
+    def recording_time(self, samplingfreq=1):
         """Time spent in an activity."""
-        col = self.columns[0]
-        original = self[col].index
-        resampled = self._get_resampled(col).index
-        moving = resampled[np.in1d(resampled, original)]
-        movingdiffs = np.diff(moving.total_seconds())
-        return Timedelta(seconds=movingdiffs.sum())
+        dummy = Series(1, index=self.index)   # important: is filled!
+        resampled = dummy.resample('%ds' % samplingfreq).mean()
+        recording = np.logical_not(
+            np.isnan(resampled.values))[1:]   # shorten for indexing diffs
+        timediffs = np.diff(resampled.index.total_seconds())
+        time_sec = timediffs[recording].sum()
+        return Timedelta(seconds=time_sec)
 
     def xpwr(self):
         """Dr Skiba's xPower."""
