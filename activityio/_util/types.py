@@ -114,24 +114,28 @@ class ActivityData(DataFrame):
         return Timedelta(seconds=time_sec)
 
     def rollmean(self, column, seconds, *, samplingfreq=1):
-        """Apply rolling mean by time to column."""
-        return (self._get_resampled(column, samplingfreq)
-                    .rolling(seconds, min_periods=1).mean())
+        """Rolling mean (right-aligned) by time."""
+        rollm = (self._get_resampled(column, samplingfreq)
+                     .rolling(seconds, min_periods=1).mean())
+        rollm[seconds - 1:] = np.nan   # right-align
+        return rollm
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
         window = 30
+        consider = slice(window - 1, None)
         smooth_pwr = (self._get_resampled('pwr')
-                          .rolling(window, min_periods=1).mean())
+                          .rolling(window, min_periods=1).mean()[consider])
 
         return np.mean(smooth_pwr**4)**0.25
 
     def xpwr(self):
         """Dr Skiba's xPower."""
         window = 25
+        consider = slice(window - 1, None)
         smooth_pwr = (self._get_resampled('pwr')
                           .rolling(window, min_periods=1)
-                          .apply(tools.ewa(window)))
+                          .apply(tools.ewa(window))[consider])
 
         return np.mean(smooth_pwr**4)**0.25
 
@@ -163,8 +167,9 @@ class ActivityData(DataFrame):
         return df.set_index('duration') if duration_index else df
 
     @staticmethod
-    def _mmp(column, window):
-        return column.rolling(window, min_periods=1).mean().max()
+    def _mmp(column, win):
+        consider = slice(win - 1, None)
+        return column.rolling(win, min_periods=1).mean()[consider].max()
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
