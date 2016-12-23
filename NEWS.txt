@@ -4,6 +4,7 @@
     - `pwr_prof()` for power profiling.
     - `recording_time()` for calculating actual time spent in an activity.
 + .fit file timestamps weren't being handled correctly. Now they are.
++ The tools module now has an `ewa` (exponentially weighted average) function, which returns a callable intended for the `.rolling().apply()` interface of `pandas`.
 + Refactored some of the reading process for xml file types.
 + Corrected a syntax error in the command line interface.
 + More general exception catching in ActivityData.__getitem__ so as not to interfere with the parent method.
