@@ -164,7 +164,7 @@ def exp_weights(n):
 
 
 def ewa(n, *, ignore_nan=True):
-    """Exponentially weighted average.
+    """Exponentially weighted average (right-aligned, effectively).
 
     Returns a callable suitable for `rolling().apply()`.
     """
@@ -172,5 +172,5 @@ def ewa(n, *, ignore_nan=True):
     sumfunc = np.nansum if ignore_nan else np.sum
 
     def func(arr):
-        return sumfunc(arr * weights)
+        return sumfunc(arr * weights) if len(arr) == n else np.nan
     return func

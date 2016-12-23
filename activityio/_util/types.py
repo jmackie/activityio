@@ -132,10 +132,9 @@ class ActivityData(DataFrame):
     def xpwr(self):
         """Dr Skiba's xPower."""
         window = 25
-        consider = slice(window - 1, None)
         smooth_pwr = (self._get_resampled('pwr')
                           .rolling(window, min_periods=1)
-                          .apply(tools.ewa(window))[consider])
+                          .apply(tools.ewa(window)))  # ewa right-aligns
 
         return np.mean(smooth_pwr**4)**0.25
 
