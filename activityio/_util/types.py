@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from functools import partialmethod, wraps
+from functools import partial, wraps
 
 import numpy as np
 from pandas import DataFrame, Series, Timedelta, TimedeltaIndex
@@ -103,30 +103,6 @@ class ActivityData(DataFrame):
             # because recursion problems with super().__getattr__()
             raise AttributeError('index is not TimedeltaIndex')
 
-    # NOTE: `min_periods` argument of DataFrame.rolling() defaults to `window`,
-    # i.e. the rolling statistic is only returned for full windows.
-    # ALSO: mangle this method to avoid clashing with any future changes
-    # to the DataFrame code.
-    __rolling = partialmethod(DataFrame.rolling, min_periods=1)
-
-    def rollmean(self, column, seconds, *, samplingfreq=1):
-        """Apply rolling mean by time to column."""
-        return (self._get_resampled(column, samplingfreq)
-                    .__rolling(seconds).mean())
-
-    def normpwr(self):
-        """Training Peaks 'Normalised Power' (NP) metric."""
-        window = 30
-        smooth_pwr = self._get_resampled('pwr').__rolling(window).mean()
-        return np.mean(smooth_pwr**4)**0.25
-
-    def xpwr(self):
-        """Dr Skiba's xPower."""
-        window = 25
-        smooth_pwr = self._get_resampled('pwr').__rolling(window).apply(
-            tools.ewa(window))
-        return np.mean(smooth_pwr**4)**0.25
-
     def recording_time(self, samplingfreq=1):
         """Time spent in an activity."""
         dummy = Series(1, index=self.index)   # important: is filled!
@@ -136,6 +112,59 @@ class ActivityData(DataFrame):
         timediffs = np.diff(resampled.index.total_seconds())
         time_sec = timediffs[recording].sum()
         return Timedelta(seconds=time_sec)
+
+    def rollmean(self, column, seconds, *, samplingfreq=1):
+        """Apply rolling mean by time to column."""
+        return (self._get_resampled(column, samplingfreq)
+                    .rolling(seconds, min_periods=1).mean())
+
+    def normpwr(self):
+        """Training Peaks 'Normalised Power' (NP) metric."""
+        window = 30
+        smooth_pwr = (self._get_resampled('pwr')
+                          .rolling(window, min_periods=1).mean())
+
+        return np.mean(smooth_pwr**4)**0.25
+
+    def xpwr(self):
+        """Dr Skiba's xPower."""
+        window = 25
+        smooth_pwr = (self._get_resampled('pwr')
+                          .rolling(window, min_periods=1)
+                          .apply(tools.ewa(window)))
+
+        return np.mean(smooth_pwr**4)**0.25
+
+    def pwr_prof(self, durations, *, duration_index=True, return_gen=False):
+        """Extract best powers for given durations.
+
+        Parameters
+        ----------
+        durations : iterable
+            Time durations (in seconds) for which best powers are to be found.
+        duration_index : bool, optional
+            Should the durations be made into the index of the returned data,
+            or left as a column?
+        return_gen : bool, optional
+            Return a generator of (duration, best_power) pairs?
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        resampled_pwr = self._get_resampled('pwr')
+        mmp_func = partial(self._mmp, resampled_pwr)
+        mmp_gen = ([dur, mmp_func(dur)] for dur in durations)
+
+        if return_gen:
+            return mmp_gen
+
+        df = DataFrame(mmp_gen, columns=('duration', 'pwr'))
+        return df.set_index('duration') if duration_index else df
+
+    @staticmethod
+    def _mmp(column, window):
+        return column.rolling(window, min_periods=1).mean().max()
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
@@ -157,33 +186,6 @@ class ActivityData(DataFrame):
     def gradient(self):
         alt, dist = (self._try_get(key) for key in ('alt', 'dist'))
         return Gradient(rise=alt.diff(), run=dist.diff())
-
-    def pwr_prof(self, durations, *, duration_index=True, return_gen=False):
-        """Extract best powers for given durations.
-
-        Parameters
-        ----------
-        durations : iterable
-            Time durations (in seconds) for which best powers are to be found.
-        duration_index : bool, optional
-            Should the durations be made into the index of the returned data,
-            or left as a column?
-        return_gen : bool, optional
-            Return a generator of (duration, best_power) pairs?
-
-        Returns
-        -------
-        pandas.DataFrame
-        """
-        resampled_pwr = self._get_resampled('pwr')
-        mmp_gen = ([dur, resampled_pwr.__rolling(dur).mean().max()]
-                   for dur in durations)
-
-        if return_gen:
-            return mmp_gen
-
-        df = DataFrame(mmp_gen, columns=('duration', 'pwr'))
-        return df.set_index('duration') if duration_index else df
 
     def _get_resampled(self, column, samplingfreq=1):
         rule = '%ds' % samplingfreq
