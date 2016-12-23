@@ -129,7 +129,7 @@ class ActivityData(DataFrame):
         window = 25
         weights = tools.ema_weights(window)
         smooth_pwr = self._get_resampled('pwr').rolling(window).apply(
-            lambda arr: np.sum(arr * weights))
+            lambda arr: np.nansum(arr * weights))
         return np.mean(smooth_pwr**4)**0.25
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
@@ -226,7 +226,6 @@ class series_property:
     """A simple descriptor that emulates property, but returns a Series."""
     def __init__(self, fget):
         self.fget = fget
-        self.__doc__ = fget.__doc__
 
     def __get__(self, obj, objtype=None):
         return Series(self.fget(obj))
