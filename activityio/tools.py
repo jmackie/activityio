@@ -156,8 +156,21 @@ def bearing(lon, lat, *, final=False, fill=np.nan):
     return np.concatenate(([fill], bearing))
 
 
-def ema_weights(n):
+def exp_weights(n):
     """Simple exponential weights function."""
     alpha = 2 / (n + 1)
     weights = np.array([alpha * (1 - alpha)**(-i) for i in range(n)])
     return weights / weights.sum()
+
+
+def ewa(n, *, ignore_nan=True):
+    """Exponentially weighted average.
+
+    Returns a callable suitable for `rolling().apply()`.
+    """
+    weights = exp_weights(n)
+    sumfunc = np.nansum if ignore_nan else np.sum
+
+    def func(arr):
+        return sumfunc(arr * weights)
+    return func
