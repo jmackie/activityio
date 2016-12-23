@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from functools import wraps
+from functools import partialmethod, wraps
 
 import numpy as np
 from pandas import DataFrame, Series, Timedelta, TimedeltaIndex
@@ -103,15 +103,28 @@ class ActivityData(DataFrame):
             # because recursion problems with super().__getattr__()
             raise AttributeError('index is not TimedeltaIndex')
 
+    # NOTE: `min_periods` argument of DataFrame.rolling() defaults to `window`,
+    # i.e. the rolling statistic is only returned for full windows.
+    # ALSO: mangle this method to avoid clashing with any future changes
+    # to the DataFrame code.
+    __rolling = partialmethod(DataFrame.rolling, min_periods=1)
+
     def rollmean(self, column, seconds, *, samplingfreq=1):
         """Apply rolling mean by time to column."""
         return (self._get_resampled(column, samplingfreq)
-                    .rolling(seconds).mean())
+                    .__rolling(seconds).mean())
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
         window = 30
-        smooth_pwr = self._get_resampled('pwr').rolling(window).mean()
+        smooth_pwr = self._get_resampled('pwr').__rolling(window).mean()
+        return np.mean(smooth_pwr**4)**0.25
+
+    def xpwr(self):
+        """Dr Skiba's xPower."""
+        window = 25
+        smooth_pwr = self._get_resampled('pwr').__rolling(window).apply(
+            tools.ewa(window))
         return np.mean(smooth_pwr**4)**0.25
 
     def recording_time(self, samplingfreq=1):
@@ -123,14 +136,6 @@ class ActivityData(DataFrame):
         timediffs = np.diff(resampled.index.total_seconds())
         time_sec = timediffs[recording].sum()
         return Timedelta(seconds=time_sec)
-
-    def xpwr(self):
-        """Dr Skiba's xPower."""
-        window = 25
-        weights = tools.ema_weights(window)
-        smooth_pwr = self._get_resampled('pwr').rolling(window).apply(
-            lambda arr: np.nansum(arr * weights))
-        return np.mean(smooth_pwr**4)**0.25
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
@@ -171,13 +176,13 @@ class ActivityData(DataFrame):
         pandas.DataFrame
         """
         resampled_pwr = self._get_resampled('pwr')
-        gen = ((dur, resampled_pwr.rolling(dur).mean().max())  # MMP
-               for dur in durations)
+        mmp_gen = ([dur, resampled_pwr.__rolling(dur).mean().max()]
+                   for dur in durations)
 
         if return_gen:
-            return gen
+            return mmp_gen
 
-        df = DataFrame(gen, columns=('duration', 'pwr'))
+        df = DataFrame(mmp_gen, columns=('duration', 'pwr'))
         return df.set_index('duration') if duration_index else df
 
     def _get_resampled(self, column, samplingfreq=1):
