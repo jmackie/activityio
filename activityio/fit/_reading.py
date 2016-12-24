@@ -76,11 +76,11 @@ def read_and_format(file_path, *, tz_str=None):
 
     if 'timestamp' in data:
         timestamps = data.pop('timestamp')  # UTC
-        tstart = timestamps[0]
 
         timezone = pytz.timezone(tz_str) if tz_str is not None else TZ_UTC
-        tz_offset = timezone.utcoffset(tstart)
+        tz_offset = timezone.utcoffset(timestamps[0])
         timestamps += tz_offset
+        tstart = timestamps[0]
 
         timeoffsets = timestamps - tstart
         data._finish_up(column_spec=COLUMN_SPEC,
