@@ -9,7 +9,7 @@ from pandas import DataFrame
 MODULE_CACHE = {}
 
 
-def smart_reader(file_path, *, vanilla=False):
+def smart_reader(file_path, *, vanilla=False, **read_kwargs):
     """Dispatch a file reader based on file extension.
 
     Parameters
@@ -20,6 +20,8 @@ def smart_reader(file_path, *, vanilla=False):
         Return a spruced up subclass of the `pandas.DataFrame` (`ActivityData`)
         and benefit from some extra data pruning and functionality, or be
         boring and get the raw data untouched.
+    **read_kwargs
+        Passed down to <file format>.read()
 
     Returns
     -------
@@ -43,6 +45,6 @@ def smart_reader(file_path, *, vanilla=False):
             module = MODULE_CACHE.get(ext)
 
     if not vanilla:
-        return module.read(file_path)
+        return module.read(file_path, **read_kwargs)
     else:
         return DataFrame.from_records(module.gen_records(file_path))

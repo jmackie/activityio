@@ -6,11 +6,15 @@ this package's API.
 
 """
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
+import pytz
 
 from activityio.fit._protocol import gen_fit_messages, DataMessage
 from activityio._util import drydoc, types
 
+
+TZ_UTC = pytz.timezone('UTC')
 
 YEARS_20 = relativedelta(years=20)   # for formatting timestamps
 
@@ -47,7 +51,7 @@ def format_message(message):
     timestamp = message_dict.pop('timestamp_s', None)
     if timestamp:
         message_dict['timestamp'] = (
-            datetime.fromtimestamp(timestamp) + YEARS_20)
+            datetime.fromtimestamp(timestamp) + YEARS_20)   # UTC time
 
     return message.name, message_dict
 
@@ -64,17 +68,23 @@ def gen_records(file_path):
             yield message
 
 
-def read_and_format(file_path):
+def read_and_format(file_path, *, tz_str=None):
     data = types.ActivityData.from_records(gen_records(file_path))
 
     if 'unknown' in data:    # TODO: look into why this is happening.
         del data['unknown']
 
     if 'timestamp' in data:
-        timestamps = data.pop('timestamp')
-        timeoffsets = timestamps - timestamps[0]
+        timestamps = data.pop('timestamp')  # UTC
+        tstart = timestamps[0]
+
+        timezone = pytz.timezone(tz_str) if tz_str is not None else TZ_UTC
+        tz_offset = timezone.utcoffset(tstart)
+        timestamps += tz_offset
+
+        timeoffsets = timestamps - tstart
         data._finish_up(column_spec=COLUMN_SPEC,
-                        start=timestamps[0], timeoffsets=timeoffsets)
+                        start=tstart, timeoffsets=timeoffsets)
     else:
         data._finish_up(column_spec=COLUMN_SPEC)
 
