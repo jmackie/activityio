@@ -29,7 +29,13 @@ setup(
 
     packages=find_packages(exclude=('references', 'scripts')),
 
-    install_requires=['numpy>=1.11.1', 'pandas>=0.18.1'],
+    install_requires=[
+        'numpy>=1.11.1',
+        'pandas>=0.18.1',
+        # copy+pasted from pandas setup.py
+        'python-dateutil >= 2',
+        'pytz >= 2011k',
+    ],
     extras_require={
         'dev': ['xlrd>=1.0.0'],
         'test': [],
