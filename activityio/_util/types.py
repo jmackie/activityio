@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from functools import partial, wraps
+from functools import wraps
 
 import numpy as np
 from pandas import DataFrame, Series, Timedelta, TimedeltaIndex
@@ -113,30 +113,24 @@ class ActivityData(DataFrame):
         time_sec = timediffs[recording].sum()
         return Timedelta(seconds=time_sec)
 
+    # NOTE: .rolling() takes a `min_periods` argument, but I think for most
+    # applications here we want to only consider a ful window.
+
     def rollmean(self, column, seconds, *, samplingfreq=1):
-        """Rolling mean (right-aligned) by time."""
-        rollm = (self._get_resampled(column, samplingfreq)
-                     .rolling(seconds, min_periods=1).mean())
-        rollm[seconds - 1:] = np.nan   # right-align
-        return rollm
+        """Rolling mean by time."""
+        return self._get_resampled(
+            column, samplingfreq).rolling(seconds).mean()
 
     def normpwr(self):
         """Training Peaks 'Normalised Power' (NP) metric."""
-        window = 30
-        consider = slice(window - 1, None)
-        smooth_pwr = (self._get_resampled('pwr')
-                          .rolling(window, min_periods=1).mean()[consider])
-
-        return np.mean(smooth_pwr**4)**0.25
+        smoothed = self.rollmean('pwr', 30)              # 30-second window
+        return np.nanmean(smoothed**4)**0.25
 
     def xpwr(self):
         """Dr Skiba's xPower."""
-        window = 25
-        smooth_pwr = (self._get_resampled('pwr')
-                          .rolling(window, min_periods=1)
-                          .apply(tools.ewa(window)))  # ewa right-aligns
-
-        return np.mean(smooth_pwr**4)**0.25
+        roll = self._get_resampled('pwr').rolling(25)    # 25-second window
+        smoothed = roll.apply(tools.ewa(25))
+        return np.mean(smoothed**4)**0.25
 
     def pwr_prof(self, durations, *, duration_index=True, return_gen=False):
         """Extract best powers for given durations.
@@ -156,19 +150,16 @@ class ActivityData(DataFrame):
         pandas.DataFrame
         """
         resampled_pwr = self._get_resampled('pwr')
-        mmp_func = partial(self._mmp, resampled_pwr)
-        mmp_gen = ([dur, mmp_func(dur)] for dur in durations)
+
+        mmp_gen = (
+            {'duration': win, 'pwr': resampled_pwr.rolling(win).mean().max()}
+            for win in durations)
 
         if return_gen:
             return mmp_gen
 
-        df = DataFrame(mmp_gen, columns=('duration', 'pwr'))
+        df = DataFrame.from_records(mmp_gen)
         return df.set_index('duration') if duration_index else df
-
-    @staticmethod
-    def _mmp(column, win):
-        consider = slice(win - 1, None)
-        return column.rolling(win, min_periods=1).mean()[consider].max()
 
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):

@@ -164,9 +164,13 @@ def exp_weights(n):
 
 
 def ewa(n, *, ignore_nan=True):
-    """Exponentially weighted average (right-aligned, effectively).
+    """Exponentially weighted average.
 
     Returns a callable suitable for `rolling().apply()`.
+
+    Notes
+    -----
+    Effectively `min_periods=n`, as is the default behaviour of pandas.
     """
     weights = exp_weights(n)
     sumfunc = np.nansum if ignore_nan else np.sum
