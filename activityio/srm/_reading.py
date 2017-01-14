@@ -19,7 +19,6 @@ from activityio._util import drydoc, exceptions
 
 DATETIME_1880 = datetime(year=1880, month=1, day=1)
 
-
 COLUMN_SPEC = {
     'alt': special_columns.Altitude,
     'cad': special_columns.Cadence,

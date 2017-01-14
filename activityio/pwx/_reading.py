@@ -10,7 +10,6 @@ from activityio._util.xml_reading import gen_nodes, sans_ns
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'    # timezone unspecified
 
-
 COLUMN_SPEC = {
     'alt': special_columns.Altitude,
     'cad': special_columns.Cadence,

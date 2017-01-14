@@ -10,8 +10,7 @@ from activityio._util.xml_reading import (
     gen_nodes, recursive_text_extract, sans_ns)
 
 
-DATETIME_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'    # UTC
-
+DATETIME_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'    # UTC, with fractional seconds
 
 COLUMN_SPEC = {
     'atemp': special_columns.Temperature,
