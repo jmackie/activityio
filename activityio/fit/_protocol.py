@@ -15,7 +15,7 @@ from struct import unpack
 from activityio.fit._profile import (
     BASE_TYPE_BYTE, BASE_TYPES, BASE_TYPES_BY_NAME,
     MESSAGE_TYPES, TYPES_INFO, GLOBAL_MESG_NUMS)
-from activityio._util.exceptions import ActivityIOError, InvalidFileError
+from activityio._util import exceptions
 
 
 EMPTY_DICT = {}    # single instance to save some memory
@@ -208,8 +208,8 @@ class DataMessage:
 
         def_message = fitfile.local_messages.get(header.local_message_type)
         if def_message is None:
-            raise MessageHeaderError('invalid local message type (%d)' %
-                                     header.local_message_type)
+            raise exceptions.FITMessageHeaderError(
+                'invalid local message type (%d)' % header.local_message_type)
 
         self.name = def_message.name
 
@@ -376,14 +376,6 @@ class FieldDefinition:
             setattr(self, name, value)
 
 
-class FileHeaderError(ActivityIOError):
-    pass
-
-
-class MessageHeaderError(ActivityIOError):
-    pass
-
-
 def read_file_header(fitfile):
     """Read the *.fit file header, modifying `fitfile` in place.
 
@@ -396,7 +388,7 @@ def read_file_header(fitfile):
     header_data = fitfile.read(12)
 
     if header_data[8:12] != b'.FIT':
-        raise InvalidFileError("this doesn't look like a fit file!")
+        raise exceptions.InvalidFileError('fit')
 
     # Larger fields are explicitly little endian from SDK.
     header_size, *version_info, data_size = unpack('<2BHI4x', header_data)
@@ -405,7 +397,7 @@ def read_file_header(fitfile):
     extra_header = header_size - 12
     if extra_header:
         if extra_header < 2:
-            raise FileHeaderError('irregular file header size')
+            raise exceptions.FITFileHeaderError('irregular file header size')
 
         fitfile.skip_bytes(extra_header)
 
