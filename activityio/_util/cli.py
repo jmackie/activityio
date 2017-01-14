@@ -12,7 +12,7 @@ VALID_FORMATS = tuple(d for d in listdir(path.dirname(activityio.__file__))
                       if not d.startswith('_') and not d.endswith('py'))
 
 
-def main():
+def parse():
 
     # Argument handling
     # -----------------
@@ -51,4 +51,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parse()

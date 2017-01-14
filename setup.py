@@ -42,7 +42,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'aio=activityio._util.cli:main',
+            'aio=activityio._util.cli:parse',
         ],
     },
 )
