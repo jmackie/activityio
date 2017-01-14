@@ -30,36 +30,36 @@ But you can also use sub-packages explicitly:
 
 ```pycon
 >>> type(data)
-<class 'activityio._util.types.ActivityData'>
+<class 'activityio._types.activitydata.ActivityData'>
 
 >>> data.head(5)
-          lap    dist  pwr   speed  temp  alt  cad  hr
-time                                                  
-00:00:00    1   5.611    0   5.611  26.8  530    0   0
-00:00:01    1  10.999    0   5.388  26.8  530    0   0
-00:00:02    1  25.054    0  14.055  27.1  532    0   0
-00:00:03    1  42.609    0  17.555  27.1  532    0   0
-00:00:04    1  59.414    0  16.805  27.3  532    0   0
+          temp  lap   dist  alt  cad  pwr  speed  hr
+time                                                
+00:00:00  26.1    1  1.027   67    0    0  1.027  71
+00:00:01  26.1    1  2.721   67    0    0  1.694  71
+00:00:02  26.2    1  4.415   67    0    0  1.694  71
+00:00:03  26.2    1  6.331   67    0    0  1.916  71
+00:00:04  26.2    1  8.469   67    0    0  2.138  75
 
 >>> data.normpwr()
-279.40584154170227
+249.54104255943844
 
 >>> type(data.speed)
-<class 'activityio._util.types.Speed'>
+<class 'activityio._types.columns.Speed'>
 >>> data.speed.base_unit
 'm/s'
 >>> data.speed.kph.mean()  # use a different unit
-41.045473986415516
+38.485063801685477
 
 >>> data.dist.base_unit
 'm'
 >>> data.dist.miles[-1]
-101.17480453266764
+134.78580023361226
 
 >>> data.alt.base_unit
 'm'
 >>> data.alt.ascent.sum()
-1779.0
+1898.0
 ```
 
 But note that you lose this functionality if you go changing column names:
