@@ -11,7 +11,8 @@ from dateutil.relativedelta import relativedelta
 import pytz
 
 from activityio.fit._protocol import gen_fit_messages, DataMessage
-from activityio._util import drydoc, types
+from activityio._types import ActivityData, special_columns
+from activityio._util import drydoc
 
 
 TZ_UTC = pytz.timezone('UTC')
@@ -20,15 +21,15 @@ YEARS_20 = relativedelta(years=20)   # for formatting timestamps
 
 
 COLUMN_SPEC = {     # see Profile.xlsx for expected column names
-    'altitude_m': types.Altitude,
-    'cadence_rpm': types.Cadence,
-    'distance_m': types.Distance,
-    'heart_rate_bpm': types.HeartRate,
-    'position_lat_semicircles': types.Latitude._from_semicircles,
-    'position_long_semicircles': types.Longitude._from_semicircles,
-    'power_watts': types.Power,
-    'speed_m/s': types.Speed,
-    'temperature_C': types.Temperature,
+    'altitude_m': special_columns.Altitude,
+    'cadence_rpm': special_columns.Cadence,
+    'distance_m': special_columns.Distance,
+    'heart_rate_bpm': special_columns.HeartRate,
+    'position_lat_semicircles': special_columns.Latitude._from_semicircles,
+    'position_long_semicircles': special_columns.Longitude._from_semicircles,
+    'power_watts': special_columns.Power,
+    'speed_m/s': special_columns.Speed,
+    'temperature_C': special_columns.Temperature,
 }
 
 
@@ -69,7 +70,7 @@ def gen_records(file_path):
 
 
 def read_and_format(file_path, *, tz_str=None):
-    data = types.ActivityData.from_records(gen_records(file_path))
+    data = ActivityData.from_records(gen_records(file_path))
 
     if 'unknown' in data:    # TODO: look into why this is happening.
         del data['unknown']

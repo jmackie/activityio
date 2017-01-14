@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-
-
-"""
 from datetime import datetime, timedelta
 from itertools import islice
 
+from activityio._types import ActivityData, special_columns
+from activityio._util import drydoc, exceptions
 from activityio._util.xml_reading import gen_nodes, sans_ns
-from activityio._util import drydoc, types
-from activityio._util.exceptions import InvalidFileError
 
 
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%S'    # timezone unspecified
 
 
 COLUMN_SPEC = {
-    'alt': types.Altitude,
-    'cad': types.Cadence,
-    'dist': types.Distance,
-    'hr': types.HeartRate,
-    'pwr': types.Power,
-    'spd': types.Speed,
-    'temp': types.Temperature,
+    'alt': special_columns.Altitude,
+    'cad': special_columns.Cadence,
+    'dist': special_columns.Distance,
+    'hr': special_columns.HeartRate,
+    'pwr': special_columns.Power,
+    'spd': special_columns.Speed,
+    'temp': special_columns.Temperature,
 }
 
 
@@ -39,7 +35,7 @@ def gen_records(file_path):
 
     root = next(nodes)
     if sans_ns(root.tag) != 'pwx':
-        raise InvalidFileError("this doesn't look like a pwx file!")
+        raise exceptions.InvalidFileError('pwx')
 
     start_time = datetime.strptime(next(nodes).text, DATETIME_FMT)
     find_these.pop(0)
@@ -54,7 +50,7 @@ def gen_records(file_path):
 
 
 def read_and_format(file_path):
-    data = types.ActivityData.from_records(gen_records(file_path))
+    data = ActivityData.from_records(gen_records(file_path))
 
     timestamps = data.pop('timestamp')
     timeoffsets = data.pop('timeoffset')

@@ -13,24 +13,24 @@ from math import nan
 from operator import ior
 from struct import unpack, calcsize
 
-from activityio._util import drydoc, types
-from activityio._util.exceptions import InvalidFileError
+from activityio._types import ActivityData, special_columns
+from activityio._util import drydoc, exceptions
 
 
 DATETIME_1880 = datetime(year=1880, month=1, day=1)
 
 
 COLUMN_SPEC = {
-    'alt': types.Altitude,
-    'cad': types.Cadence,
-    'hr': types.HeartRate,
-    'kph': types.Speed._from_kph,
-    'lap': types.LapCounter,
-    'lat': types.Latitude,
-    'lon': types.Longitude,
-    'metres': types.Distance._from_discrete,
-    'temp': types.Temperature,
-    'watts': types.Power,
+    'alt': special_columns.Altitude,
+    'cad': special_columns.Cadence,
+    'hr': special_columns.HeartRate,
+    'kph': special_columns.Speed._from_kph,
+    'lap': special_columns.LapCounter,
+    'lat': special_columns.Latitude,
+    'lon': special_columns.Longitude,
+    'metres': special_columns.Distance._from_discrete,
+    'temp': special_columns.Temperature,
+    'watts': special_columns.Power,
 }
 
 
@@ -164,7 +164,7 @@ def open_srm(file_path):
 
     magic = reader.read(4).decode()
     if magic[:3] != 'SRM':
-        raise InvalidFileError("this doesn't look like an srm file!")
+        raise exceptions.InvalidFileError('srm')
     reader.version = int(magic[3])
 
     yield reader
@@ -231,7 +231,7 @@ def gen_records(file_path):
 
 
 def read_and_format(file_path):
-    data = types.ActivityData.from_records(gen_records(file_path))
+    data = ActivityData.from_records(gen_records(file_path))
 
     timestamps = data.pop('timestamp')
     timeoffsets = timestamps - timestamps[0]

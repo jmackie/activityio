@@ -4,31 +4,31 @@ import re
 
 from pandas import to_datetime
 
+from activityio._types import ActivityData, special_columns
+from activityio._util import drydoc, exceptions
 from activityio._util.xml_reading import (
     gen_nodes, recursive_text_extract, sans_ns)
-from activityio._util import drydoc, types
-from activityio._util.exceptions import InvalidFileError
 
 
-DATETIME_FMT = '%Y-%m-%dT%H:%M:%S.%fZ'    # UTC
+CAP = re.compile(r'([A-Z]{1})')
 
+# According to Garmin, all times are stored in UTC.
+DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
 
 COLUMN_SPEC = {
-    'altitude_meters': types.Altitude,
-    'cadence': types.Cadence,
-    'distance_meters': types.Distance,
-    'longitude_degrees': types.Longitude,
-    'latitude_degrees': types.Latitude,
-    'speed': types.Speed,
-    'watts': types.Power,
+    'altitude_meters': special_columns.Altitude,
+    'cadence': special_columns.Cadence,
+    'distance_meters': special_columns.Distance,
+    'longitude_degrees': special_columns.Longitude,
+    'latitude_degrees': special_columns.Latitude,
+    'speed': special_columns.Speed,
+    'watts': special_columns.Power,
 }
 
 
 def titlecase_to_undercase(string):
     """ ColumnName --> column_name """
-    under = re.sub(r'([A-Z]{1})',
-                   lambda pattern: '_' + pattern.group(1).lower(),
-                   string)
+    under = CAP.sub(lambda pattern: '_' + pattern.group(1).lower(), string)
     return under.lstrip('_')
 
 
@@ -38,7 +38,7 @@ def gen_records(file_path):
 
     root = next(nodes)
     if sans_ns(root.tag) != 'TrainingCenterDatabase':
-        raise InvalidFileError("this doesn't look like a tcx file!")
+        raise exceptions.InvalidFileError('tcx')
 
     trackpoints = nodes
     for trkpt in trackpoints:
@@ -46,7 +46,7 @@ def gen_records(file_path):
 
 
 def read_and_format(file_path):
-    data = types.ActivityData.from_records(gen_records(file_path))
+    data = ActivityData.from_records(gen_records(file_path))
     times = data.pop('Time')                    # should always be there
     data = data.astype('float64', copy=False)   # try and make numeric
 
