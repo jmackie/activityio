@@ -5,9 +5,8 @@ Translate the `_protocol` module functionality to be consistent with
 this package's API.
 
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from dateutil.relativedelta import relativedelta
 import pytz
 
 from activityio.fit._protocol import gen_fit_messages, DataMessage
@@ -17,8 +16,7 @@ from activityio._util import drydoc
 
 TZ_UTC = pytz.timezone('UTC')
 
-YEARS_20 = relativedelta(years=20)   # for formatting timestamps
-
+DATETIME_1990 = datetime(year=1989, month=12, day=31)
 
 COLUMN_SPEC = {     # see Profile.xlsx for expected column names
     'altitude_m': special_columns.Altitude,
@@ -51,8 +49,8 @@ def format_message(message):
 
     timestamp = message_dict.pop('timestamp_s', None)
     if timestamp:
-        message_dict['timestamp'] = (
-            datetime.fromtimestamp(timestamp) + YEARS_20)   # UTC time
+        message_dict['timestamp'] = (  # UTC time
+            DATETIME_1990 + timedelta(seconds=timestamp))
 
     return message.name, message_dict
 
@@ -72,8 +70,10 @@ def gen_records(file_path):
 def read_and_format(file_path, *, tz_str=None):
     data = ActivityData.from_records(gen_records(file_path))
 
-    if 'unknown' in data:    # TODO: look into why this is happening.
+    try:
         del data['unknown']
+    except KeyError:
+        pass
 
     if 'timestamp' in data:
         timestamps = data.pop('timestamp')  # UTC
