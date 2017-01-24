@@ -14,6 +14,9 @@ CAP = re.compile(r'([A-Z]{1})')
 
 # According to Garmin, all times are stored in UTC.
 DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
+# Despite what the schema says, there are files out
+# in the wild with fractional seconds...
+DATETIME_FMT_WITH_FRAC = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 COLUMN_SPEC = {
     'altitude_meters': special_columns.Altitude,
@@ -53,7 +56,11 @@ def read_and_format(file_path):
     # Prettier column names!
     data.columns = map(titlecase_to_undercase, data.columns)
 
-    timestamps = to_datetime(times, format=DATETIME_FMT, utc=True)
+    try:
+        timestamps = to_datetime(times, format=DATETIME_FMT, utc=True)
+    except ValueError:  # bad format, try with fractional seconds
+        timestamps = to_datetime(times, format=DATETIME_FMT_WITH_FRAC, utc=True)
+
     timeoffsets = timestamps - timestamps[0]
     data._finish_up(column_spec=COLUMN_SPEC,
                     start=timestamps[0], timeoffsets=timeoffsets)
