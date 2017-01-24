@@ -4,7 +4,7 @@
     - `pwr_prof()` for power profiling. This uses the new `PowerProfile` type.
     - `recording_time()` for calculating actual time spent in an activity.
 + .fit file timestamps weren't being handled correctly; now they are. And you can now 'localise' them from UTC time (default) by passing in a timezone string. Closes #1.
-+ .tcx files shouldn't have expected fractional seconds. Closes #2.
++ .tcx files don't expect fractional seconds by default (closes #2).
 + The `tools` module now has an `ewa` (exponentially weighted average) function, which returns a callable intended for the `.rolling().apply()` interface of `pandas`.
 + The `PowerProfile` type (created via the `pwr_prof()` method on an `ActivityData` instance) makes performance profiling straightforward. Particularly across a number of files.
 + Restructured the code base as type definitions needed their own subpackage, rather than just a module.
