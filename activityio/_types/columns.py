@@ -7,7 +7,7 @@ from activityio import tools
 from activityio._types.base import SeriesSubclass, series_property
 
 
-REGISTRY = {}    # grows on import via @special decorator
+REGISTRY = {}    # grows at import-time via the below metaclass
 
 
 class SpecialRegistrar(type):
