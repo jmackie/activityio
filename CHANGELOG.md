@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [0.0.3] - 2017-04-04
 ### Added
 - Direct `pytz` dependency.
 - More general exception catching in `ActivityData.__getitem__` so as not to interfere with the parent method.
@@ -21,7 +21,7 @@
 - FIT file timestamp handling. You can also now localise them by passing in a timezone string. (Closes #1)
 - TCX file timestamp handling. They no longer expect fractional seconds by default. (Closes #2)
 
-## [0.0.1] - 2016-11-02
+## [0.0.2] - 2016-11-02
 ### Added
 - Support for GPX files.
 - Command line interface (see `aio -h`).
