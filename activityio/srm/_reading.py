@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Reading logic for SRM files. Should cover versions 5--9.
-
-"""
-from collections import deque
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from functools import reduce
 from itertools import accumulate
 from math import nan
-from operator import ior
 from struct import unpack, calcsize
 
 from activityio._types import ActivityData, special_columns
@@ -38,27 +31,22 @@ class SRMHeader:
                  'block_count', 'marker_count', 'comment_len', '_comment')
 
     def __init__(self, srmfile):
-        raw = srmfile.read(self.size)
-        values = list(unpack(self.fmt, raw))
-        values[2] /= values.pop(3)   # recording_interval (seconds; 1 / Hz)
+        fmt = '<2H2B2HxB' + '70s'
+        raw = srmfile.read(calcsize(fmt))
+        values = list(unpack(fmt, raw))  # need a list for pop()
+
+        values[2] /= values.pop(3)  # recording_interval (seconds; 1 / Hz)
 
         for name, value in zip(self.__slots__, values):
             setattr(self, name, value)
 
     @property
-    def fmt(self):
-        return '<2H2B2HxB' + '70s'
-
-    @property
-    def size(self):
-        return calcsize(self.fmt)
-
-    @property
     def comment(self):
-        return self._comment.decode().rstrip('\x00')
+        return self._comment.decode('utf-8', 'replace').rstrip('\x00')
 
     @property
     def date(self):
+        # Training date (days since Jan 1, 1880)
         return DATETIME_1880 + timedelta(days=self.days_since_1880)
 
 
@@ -74,11 +62,7 @@ class SRMMarker:
         for name, value in zip(self.__slots__, values):
             setattr(self, name, value)
 
-        # Data fixup: make sure markers are consistently one-indexed.
-        self.start = max(self.start, 1)
-        self.end = max(self.end, 1)
-        # Data fixup: some srmwin versions wrote markers with start > end.
-        self.start, self.end = sorted([self.start, self.end])
+        self._fixup()
 
     @staticmethod
     def fmt(version):
@@ -89,12 +73,21 @@ class SRMMarker:
 
     @property
     def comment(self):
-        return self._comment.decode().rstrip('\x00')
+        return self._comment.decode('utf-8', 'replace').rstrip('\x00')
 
-    @property
-    def indices(self):
-        """start and stop attributes, zero-indexed."""
-        return {self.start - 1, self.end - 1}   # one-indexed!
+    def _fixup(self):
+        # Make sure markers are consistently one-indexed,
+        # then zero-index them.
+        self.start = max(self.start, 1) - 1
+        self.end = max(self.end, 1) - 1
+
+        # Some srmwin versions wrote markers with start > end.
+        self.start, self.end = sorted([self.start, self.end])
+
+
+class SRMSummaryMarker(SRMMarker):
+    """SRM Files always contain at least one marker that encompasses
+    the entire file."""
 
 
 class SRMBlock:
@@ -105,7 +98,7 @@ class SRMBlock:
         raw = srmfile.read(calcsize(fmt))
         hsec_since_midnight, self.chunk_count = unpack(fmt, raw)
 
-        # hsec to sec.
+        # hsec --> sec.
         self.sec_since_midnight = timedelta(seconds=hsec_since_midnight / 100)
 
         self.end = None   # set later
@@ -115,13 +108,47 @@ class SRMBlock:
         return '<L' + ('H' if version < 9 else 'L')
 
 
-class SRMChunk:
-    __slots__ = ('watts', 'cad', 'hr', 'kph', 'alt', 'temp', 'metres',
-                 'lat', 'lon')
+class SRMCalibrationData:
+    __slots__ = ('zero', 'slope', '_data_count')
 
     def __init__(self, srmfile):
+        self.zero, self.slope = unpack('<2H', srmfile.read(4))
 
-        self.lat, self.lon = nan, nan   # sensible default
+        # We'll also consume the data count here, as it's safer
+        # to use the sum of block chunk counts.
+        fmt = '<%sx' % ('H' if srmfile.version < 9 else 'L')
+        self._data_count, = unpack(fmt, srmfile.read(calcsize(fmt)))
+
+
+class SRMPreamble:
+    __slots__ = ('header', 'summary_marker', 'markers', 'blocks',
+                 'calibration', 'data_count')
+
+    def __init__(self, srmfile):
+        self.header = SRMHeader(srmfile)
+
+        self.summary_marker = SRMSummaryMarker(srmfile)
+        self.markers = [SRMMarker(srmfile)
+                        for _ in range(self.header.marker_count)]
+
+        blocks = [SRMBlock(srmfile)
+                  for _ in range(self.header.block_count)]
+        block_ends = accumulate(block.chunk_count for block in blocks)
+        for block, end in zip(blocks, block_ends):
+            setattr(block, 'end', end)
+        self.blocks = blocks
+
+        self.calibration = SRMCalibrationData(srmfile)
+        self.data_count = sum(block.chunk_count for block in blocks)
+
+
+class SRMChunk:
+    __slots__ = ('watts', 'cad', 'hr', 'kph', 'alt', 'temp',
+                 'metres', 'lat', 'lon')  # variable
+
+    def __init__(self, srmfile, recording_interval):
+        self.metres = nan
+        self.lat, self.lon = nan, nan
 
         if srmfile.version < 7:
             self.watts, self.kph = self.compact_power_speed(srmfile)
@@ -137,14 +164,13 @@ class SRMChunk:
                 self.lat, self.lon = (l * 180 / 0x7fffffff for l in latlon)
 
             self.temp *= 0.1
-            self.kph = 0 if self.kph < 0 else self.kph * 3.6 / 1000
-
-        # Need to *make* a distance field (recording interval is in sec)
-        self.metres = srmfile.recording_interval * self.kph / 3.6
+            self.kph = 0 if (self.kph < 0) else self.kph * 3.6 / 1000
+            self.metres = recording_interval * self.kph / 3.6
 
     @staticmethod
     def compact_power_speed(srmfile):
         pwr_spd = unpack('<3B', srmfile.read(3))
+        # Ew.
         watts = (pwr_spd[1] & 0x0f) | (pwr_spd[2] << 0x4)
         kph = ((pwr_spd[1] & 0xf0) << 3 | (pwr_spd[0] & 0x7f)) * 3 / 26
         return watts, kph
@@ -153,76 +179,57 @@ class SRMChunk:
         for name in self.__slots__:
             yield name, getattr(self, name)
 
-    def as_dict(self):
-        return {name: value for name, value in self}
-
 
 @contextmanager
 def open_srm(file_path):
     reader = open(file_path, 'rb')
 
-    magic = reader.read(4).decode()
+    magic = reader.read(4).decode('utf-8')
     if magic[:3] != 'SRM':
         raise exceptions.InvalidFileError('srm')
-    reader.version = int(magic[3])
+    reader.version = int(magic[-1])
 
     yield reader
+
     reader.close()
 
 
 @drydoc.gen_records
 def gen_records(file_path):
     with open_srm(file_path) as srmfile:
-        header = SRMHeader(srmfile)
-        srmfile.recording_interval = header.recording_interval  # useful!
+        preamble = SRMPreamble(srmfile)
 
-        markers = deque(    # deque for popleft()
-            SRMMarker(srmfile) for __ in range(header.marker_count + 1))
+        header = preamble.header
 
-        blocks = deque(
-            SRMBlock(srmfile) for __ in range(header.block_count))
+        markers, blocks = preamble.markers, preamble.blocks
+        markers.reverse()  # for
+        blocks.reverse()   # popping
 
-        block_ends = accumulate(block.chunk_count for block in blocks)
-        for block, end in zip(blocks, block_ends):
-            setattr(block, 'end', end)
+        try:   # there may only be a summary marker
+            current_marker = markers.pop()
+        except IndexError:
+            pass
 
-        # Calibration data
-        zero, slope = unpack('<2H', srmfile.read(4))
+        current_block = blocks.pop()
 
-        data_count_fmt = '<%sx' % ('H' if srmfile.version < 9 else 'L')
-        data_count, = unpack(data_count_fmt,
-                             srmfile.read(calcsize(data_count_fmt)))
-
-        # data_count might overflow at 64k, so use sum from blocks instead
-        data_count = sum(block.chunk_count for block in blocks)
-
-        # Start generating the chunks (i.e. records)
-        # ------------------------------------------
-
-        # Stuff for creating timestamps
-        current_block = blocks.popleft()
         timestamp = header.date + current_block.sec_since_midnight
-        rec_int = timedelta(seconds=header.recording_interval)
+        rec_int = header.recording_interval
+        rec_int_td = timedelta(seconds=rec_int)
+        lap = 1
 
-        # Stuff for creating a lap counter
-        lap = 0
-        new_lap_i = deque(
-            reduce(ior, (marker.indices for marker in markers)))
-        next_lap = new_lap_i.popleft()
-
-        for i in range(data_count):
-            chunk = SRMChunk(srmfile).as_dict()
+        for i in range(preamble.data_count):
+            chunk = dict(SRMChunk(srmfile, rec_int))
+            chunk['metres']
 
             if i == current_block.end:
-                current_block = blocks.popleft()
+                current_block = blocks.pop()
                 timestamp = header.date + current_block.sec_since_midnight
             else:
-                timestamp += rec_int
+                timestamp += rec_int_td
 
-            if i == next_lap:
+            if markers and i == current_marker.end:  # short-circuiting
                 lap += 1
-                if new_lap_i:   # are there any more lap triggers?
-                    next_lap = new_lap_i.popleft()
+                current_marker = markers.pop()
 
             chunk.update(timestamp=timestamp, lap=lap)
 
@@ -236,6 +243,7 @@ def read_and_format(file_path):
     timeoffsets = timestamps - timestamps[0]
 
     data._finish_up(column_spec=COLUMN_SPEC,
-                    start=timestamps[0], timeoffsets=timeoffsets)
+                    start=timestamps[0],
+                    timeoffsets=timeoffsets)
 
     return data

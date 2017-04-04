@@ -7,7 +7,7 @@ from pandas import DataFrame, Series
 from activityio._util import exceptions
 
 
-__all__ = ('DataFrameSubclass', 'SeriesSubclass',   # using * import elsewhere
+__all__ = ('DataFrameSubclass', 'SeriesSubclass',  # using * import elsewhere
            'series_property', 'new_column_sugar')
 
 
@@ -50,7 +50,7 @@ class series_property:
 
 def new_column_sugar(needs: tuple, name=None):
     """Decorator for certain methods of ActivityData that create new columns
-    using the special column types specified here.
+    using the special column types.
 
     Parameters
     ----------

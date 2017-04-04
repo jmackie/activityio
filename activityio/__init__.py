@@ -1,7 +1,3 @@
-"""
-Some general top-level package details here...
+__version__ = '0.0.3'
 
-Import the modules you need!
-
-"""
 from activityio._util.reader import smart_reader as read

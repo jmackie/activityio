@@ -6,11 +6,11 @@ from pandas import Series, Timedelta, TimedeltaIndex
 from activityio import tools
 from activityio._util import exceptions
 from activityio._types import (
-    DataFrameSubclass, PowerProfile, new_column_sugar, special_columns)
+    DataFrameSubclass, new_column_sugar, special_columns)
 
 
 class ActivityData(DataFrameSubclass):
-    _metadata = ['start', '_athlete']
+    _metadata = ['start']
 
     def __getitem__(self, key):
         """Create the illusion of Series subclasses in the DataFrame."""
@@ -46,17 +46,6 @@ class ActivityData(DataFrameSubclass):
         return self._get_resampled(
             column, samplingfreq).rolling(seconds).mean()
 
-    def normpwr(self):
-        """Training Peaks 'Normalised Power' (NP) metric."""
-        smoothed = self.rollmean('pwr', 30)              # 30-second window
-        return np.nanmean(smoothed**4)**0.25
-
-    def xpwr(self):
-        """Dr Skiba's xPower."""
-        roll = self._get_resampled('pwr').rolling(25)    # 25-second window
-        smoothed = roll.apply(tools.ewa(25))
-        return np.mean(smoothed**4)**0.25
-
     @new_column_sugar(needs=('lon', 'lat'), name='dists_m')
     def haversine(self, **kwargs):
         lon, lat = (self[ax].radians.values for ax in ('lon', 'lat'))
@@ -77,8 +66,6 @@ class ActivityData(DataFrameSubclass):
     def gradient(self):
         alt, dist = (self._try_get(key) for key in ('alt', 'dist'))
         return special_columns.Gradient(rise=alt.diff(), run=dist.diff())
-
-    pwr_prof = PowerProfile.from_activitydata
 
     # Private methods
     # ---------------

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Avoid repeating documentation.
-
-These functions are intended as decorators, which will pass their own docstring
-to the incoming function. Neat!
+Avoid repeating documentation. A bit hacky but it will do.
 
 """
 import inspect
+
 
 def gen_records(func):
     """Generator function for iterating over individual file records.

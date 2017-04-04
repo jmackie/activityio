@@ -4,8 +4,10 @@
 Exceptions for this package.
 
 """
+
+
 class ActivityIOError(Exception):
-    """The base exception for all this package's exceptions."""
+    """Base exception."""
     _default_message = ''
 
     def __init__(self, message=None):
@@ -14,7 +16,7 @@ class ActivityIOError(Exception):
 
 class InvalidFileError(Exception):
     def __init__(self, fmt):
-        determiner = 'an' if fmt[0] in ('aeiou' + 's') else 'a'
+        determiner = 'an' if fmt[0] in ('aeiou' + 's') else 'a'  # grammar
         message = "this doesn't look like %s %s file!" % (determiner, fmt)
         super().__init__(message)
 
@@ -30,7 +32,6 @@ class RequiredColumnError(ActivityIOError):
 
 # Exceptions specific to the fit subpackage
 # -----------------------------------------
-
 class FITFileHeaderError(ActivityIOError):
     pass
 

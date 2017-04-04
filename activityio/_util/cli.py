@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+parse is installed as an executable console_script with this package.
+
+"""
 from argparse import ArgumentParser
 from functools import partial
 from importlib import import_module
@@ -15,7 +19,6 @@ VALID_FORMATS = tuple(d for d in listdir(path.dirname(activityio.__file__))
 def parse():
 
     # Argument handling
-    # -----------------
     parser = ArgumentParser(description='parse an activity file')
 
     parser.add_argument('input',
@@ -35,7 +38,6 @@ def parse():
     args = parser.parse_args()
 
     # Script begins
-    # -------------
     fmt = args.format or path.splitext(args.input)[-1][1:]
     module = import_module('activityio.' + fmt)
     data = module.read(args.input)

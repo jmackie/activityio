@@ -4,74 +4,10 @@
 General tools that complement the API.
 
 """
-from itertools import groupby, accumulate
-from math import exp
-
 import numpy as np
 
 
 EARTH_RADIUS = 6371e3   # metres
-
-
-def wbalance(power, timer_sec, *, CP, Wprime=None, first_value=0):
-    """Calculate W' balance
-
-    Parameters
-    ----------
-    power, timer_sec : numpy arrays
-        Power (watts) and timer/timeoffsets (seconds).
-    CP : scalar number
-        Critical power value.
-    Wprime : scalar number, optional
-        A Wprime value in kilojoules.
-    first_value : int, optional
-        The initial value of the returned array, for which W' obviously cannot
-        be calculated. Zero is sensible, but 'nan' could also be used.
-    """
-    wbal = [first_value]
-
-    timedeltas_sec = timer_sec[1:] - timer_sec[:-1]
-
-    # Iterate over sub- and supra-CP sections alternately.
-    sections = groupby(zip(timedeltas_sec, power), lambda x: x[1] <= CP)
-
-    to_recover = 0
-
-    for lt_CP, section in sections:
-
-        deltatime, powers = zip(*section)
-
-        if lt_CP:
-
-            if to_recover:   # anything?
-                deltaCP = (CP - power for power in powers)
-                recovery_time = accumulate(deltatime)
-                tau_consts = (546 * exp(-0.01 * dcp) + 316 for dcp in deltaCP)
-                wbal.extend(to_recover * exp(-tu / tau)
-                            for tu, tau in zip(recovery_time, tau_consts))
-            else:
-                wbal.extend(0 for _ in deltatime)   # fill
-
-        else:
-            deltapwr = (power - CP for power in powers)
-            cum_work = accumulate(  # LOL
-                dt * dpwr for dt, dpwr in zip(deltatime, deltapwr))
-
-            # Work is accumulated *on top of* whatever the
-            # previous (end-recovery) W' balance state is.
-            last_wbal = wbal[-1]
-            cum_work = (last_wbal + work for work in cum_work)
-
-            wbal.extend(cum_work)
-            to_recover = wbal[-1]
-
-    wbal = np.array(wbal)
-    wbal /= 1000   # kJ
-
-    if Wprime is not None:
-        wbal = Wprime - wbal
-
-    return wbal
 
 
 def haversine(lon, lat, *, fill=0):
@@ -91,11 +27,10 @@ def haversine(lon, lat, *, fill=0):
 
     Examples
     --------
-    >>> from activityio.tools import haversine
-    >>> dist = haversine(np.radians([-77.037852, -77.043934]),
-    ...                  np.radians([38.898556, 38.897147]))
-    >>> '{:.1f} metres'.format(dist[-1])  # ignoring the leading zero
-    '549.2 metres'
+        >>> dist = haversine(np.radians([-77.037852, -77.043934]),
+        ...                  np.radians([38.898556, 38.897147]))
+        >>> '{:.1f} metres'.format(dist[-1])  # ignoring the leading zero
+        '549.2 metres'
 
     References
     ----------
@@ -125,7 +60,7 @@ def bearing(lon, lat, *, final=False, fill=np.nan):
         Positional coordinates in *radians*.
     final : bool, optional
         The initial bearing (also known as the forward azimuth) is returned by
-        default, but if `final=True` the final bearing is returned instead.
+        default, but if ``final=True`` the final bearing is returned instead.
     fill: scalar
         An appropriate missing value for the start.
 
@@ -133,6 +68,13 @@ def bearing(lon, lat, *, final=False, fill=np.nan):
     -------
     numpy array
         Direction of travel between adjacent points in decimal degrees.
+
+    Examples
+    --------
+        >>> lon = -0.8514, -0.8518
+        >>> lat = 52.0503, 52.0495
+        >>> bearing(np.radians(lon), np.radians(lat))
+        array([          nan,  197.09216497])
 
     References
     ----------
@@ -157,7 +99,14 @@ def bearing(lon, lat, *, final=False, fill=np.nan):
 
 
 def exp_weights(n):
-    """Simple exponential weights function."""
+    """Simple exponential weights function.
+
+        >>> w = exp_weights(3)
+        >>> print(w)
+        [ 0.14285714  0.28571429  0.57142857]
+        >>> sum(w)
+        1.0
+    """
     alpha = 2 / (n + 1)
     weights = np.array([alpha * (1 - alpha)**(-i) for i in range(n)])
     return weights / weights.sum()
@@ -166,11 +115,11 @@ def exp_weights(n):
 def ewa(n, *, ignore_nan=True):
     """Exponentially weighted average.
 
-    Returns a callable suitable for `rolling().apply()`.
+    Returns a callable suitable for ``DataFrame.rolling().apply()``.
 
     Notes
     -----
-    Effectively `min_periods=n`, as is the default behaviour of pandas.
+    Effectively ``min_periods=n``, as is the default behaviour of pandas.
     """
     weights = exp_weights(n)
     sumfunc = np.nansum if ignore_nan else np.sum

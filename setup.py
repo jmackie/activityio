@@ -2,14 +2,20 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+
 here = path.abspath(path.dirname(__file__))
 
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+with open(path.join(here, 'activityio', '__init__.py')) as pkg:
+    __version__ = eval(pkg.readline().split('=')[1])
+
 
 setup(
     name='activityio',
-    version='0.0.3',
+    version=__version__,
     description='Exercise data handling library',
     long_description=long_description,
     url='https://github.com/jmackie4/activityio',
@@ -27,13 +33,10 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    packages=find_packages(exclude=('references', 'scripts')),
-
+    packages=find_packages(),
     install_requires=[
         'numpy>=1.11.1',
         'pandas>=0.18.1',
-        # copy+pasted from pandas setup.py
-        'python-dateutil >= 2',
         'pytz >= 2011k',
     ],
     extras_require={

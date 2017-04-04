@@ -28,11 +28,6 @@ def transformer(functions):
     return func
 
 
-def zip_staggered(iterable):
-    ls = list(iterable)   # need to consume the iterable, sadly
-    return zip(ls[:-1], ls[1:])
-
-
 def make_lap_column(length, new_lap_i):
     laps = np.zeros(length)
     laps[new_lap_i] = 1

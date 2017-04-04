@@ -5,7 +5,7 @@ This code was adapted largely from the GoldenCheetah code base [1]_.
 
 Rainer Clasen [2]_, developer of the `srmio` utility, was also kind enough to
 provide a file format specification. This specification, though incomplete, can
-be found in the '_references' directory of this subpackage.
+be found in 'references' at the root of this package.
 
 
 .. [1] https://github.com/GoldenCheetah/GoldenCheetah/blob/master/src/FileIO/SrmRideFile.cpp

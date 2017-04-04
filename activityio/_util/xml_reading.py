@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Some useful functions for parsing XML file types.
+Functions for memory efficient XML parsing.
 
-Note we need to name this `xml_reading` so as not to clobber the standard
+Note we need to name this ``xml_reading`` so as not to clobber the standard
 library package.
 
 """
 from xml.etree.cElementTree import iterparse
+
 
 def gen_nodes(file_path, node_names, *, with_root=False):
     """Efficiently iterate over specific nodes of an XML document.
